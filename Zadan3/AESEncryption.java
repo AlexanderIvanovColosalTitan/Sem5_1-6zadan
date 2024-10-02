@@ -7,7 +7,6 @@ public class AESEncryption implements EncryptionAlgorithm {
     private SecretKey secretKey;
 
     public AESEncryption() throws Exception {
-        // Генерируем ключ только один раз
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         keyGen.init(128);
         this.secretKey = keyGen.generateKey();
