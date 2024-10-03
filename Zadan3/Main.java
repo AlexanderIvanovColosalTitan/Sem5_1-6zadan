@@ -6,22 +6,17 @@ public class Main {
     private JFrame frame;
     private JTextField inputField;
     private JTextArea outputArea;
-    private JComboBox<String> algorithmSelector;
-    private DataEncryptor encryptor;
-    private AESEncryption aesEncryption;
-    private RSAEncryption rsaEncryption;
+    private JComboBox<String> algorithmComboBox;
+    private EncryptionBridge encryptionBridge;
 
-    public Main() throws Exception {
-        aesEncryption = new AESEncryption();
-        rsaEncryption = new RSAEncryption();
-
-        frame = new JFrame("Encryption App");
-        frame.setSize(400, 400);
+    public Main() {
+        frame = new JFrame("Система Шифрования");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 300);
         frame.setLayout(null);
 
         inputField = new JTextField();
-        inputField.setBounds(50, 20, 300, 30);
+        inputField.setBounds(50, 30, 300, 30);
         frame.add(inputField);
 
         outputArea = new JTextArea();
@@ -29,26 +24,34 @@ public class Main {
         frame.add(outputArea);
 
         String[] algorithms = {"AES", "RSA", "SHA"};
-        algorithmSelector = new JComboBox<>(algorithms);
-        algorithmSelector.setBounds(50, 60, 300, 30);
-        frame.add(algorithmSelector);
+        algorithmComboBox = new JComboBox<>(algorithms);
+        algorithmComboBox.setBounds(50, 70, 100, 30);
+        frame.add(algorithmComboBox);
 
-        JButton encryptButton = new JButton("Encrypt");
-        encryptButton.setBounds(50, 210, 100, 30);
+        JButton encryptButton = new JButton("Зашифровать");
+        encryptButton.setBounds(160, 70, 120, 30);
         encryptButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                processInput(true);
+                String data = inputField.getText();
+                String selectedAlgorithm = (String) algorithmComboBox.getSelectedItem();
+                setEncryption(selectedAlgorithm);
+                String result = encryptionBridge.performEncryption(data);
+                outputArea.setText(result);
             }
         });
         frame.add(encryptButton);
 
-        JButton decryptButton = new JButton("Decrypt");
-        decryptButton.setBounds(250, 210, 100, 30);
+        JButton decryptButton = new JButton("Расшифровать");
+        decryptButton.setBounds(290, 70, 120, 30);
         decryptButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                processInput(false);
+                String data = outputArea.getText();
+                String selectedAlgorithm = (String) algorithmComboBox.getSelectedItem();
+                setEncryption(selectedAlgorithm);
+                String result = encryptionBridge.performDecryption(data);
+                outputArea.setText(result);
             }
         });
         frame.add(decryptButton);
@@ -56,41 +59,22 @@ public class Main {
         frame.setVisible(true);
     }
 
-    private void processInput(boolean isEncrypting) {
-        String data = inputField.getText();
-        String selectedAlgorithm = (String) algorithmSelector.getSelectedItem();
-
-        try {
-            switch (selectedAlgorithm) {
-                case "AES":
-                    encryptor = new ConcreteDataEncryptor(aesEncryption);
-                    break;
-                case "RSA":
-                    encryptor = new ConcreteDataEncryptor(rsaEncryption);
-                    break;
-                case "SHA":
-                    if (isEncrypting) {
-                        encryptor = new ConcreteDataEncryptor(new SHAEncryption());
-                    } else {
-                        outputArea.setText("SHA is a one-way hash function and cannot be decrypted.");
-                        return;
-                    }
-                    break;
-            }
-            String result = isEncrypting ? encryptor.encryptData(data) : encryptor.decryptData(data);
-            outputArea.setText(result);
-        } catch (Exception ex) {
-            outputArea.setText("Error: " + ex.getMessage());
+    private void setEncryption(String algorithm) {
+        switch (algorithm) {
+            case "AES":
+                encryptionBridge = new EncryptionBridge(new AESEncryption());
+                break;
+            case "RSA":
+                encryptionBridge = new EncryptionBridge(new RSAEncryption());
+                break;
+            case "SHA":
+                encryptionBridge = new EncryptionBridge(new SHAEncryption());
+                break;
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                new Main();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+    public static void main(String[] args) {
+        new Main();
     }
 }
+
